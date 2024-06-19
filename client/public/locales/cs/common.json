@@ -144,7 +144,7 @@
             "used_length": "Použitá délka",
             "remaining_length": "Zbývající délka",
             "location": "Umístění",
-            "lot_nr": "Číslo umístění",
+            "lot_nr": "Číslo šarže",
             "first_used": "První použití",
             "last_used": "Naposledy použitá",
             "registered": "Registrováno",
@@ -152,7 +152,9 @@
             "archived": "Archivováno",
             "price": "Cena",
             "spool_weight": "Prázdná hmotnost",
-            "initial_weight": "Výchozí hmotnost"
+            "initial_weight": "Výchozí hmotnost",
+            "filament_internal": "Interní",
+            "filament_external": "Externí"
         },
         "fields_help": {
             "weight_to_use": "Vyberte, jakou hodnotu hmotnosti chcete zadat. Naměřená hmotnost je k dispozici pouze v případě, že je pro vybraný filament nastavena hmotnost cívky.",
@@ -162,8 +164,9 @@
             "location": "Kde se cívka nachází, pokud máte více míst, kde cívky skladujete.",
             "lot_nr": "Číslo šarže výrobce. Lze použít k zajištění jednotné barvy tisku v případě použití více cívek.",
             "price": "Cena celé cívky. Pokud není nastavena, předpokládá se cena filamentu.",
-            "spool_weight": "Hmotnost prázdné cívky. Tato hodnota může pocházet buď od vlákna, nebo od prodejce, ale sleduje se na úrovni cívky, aby bylo možné zohlednit individuální odchylky hmotnosti prázdné cívky.",
-            "initial_weight": "Počáteční hmotnost vlákna (čistá hmotnost). Tato hodnota může vycházet z vlákna, ale sleduje se na úrovni cívky, aby bylo možné zohlednit individuální změny hmotnosti vlákna na cívce."
+            "spool_weight": "Hmotnost prázdné cívky. Nechte prázdné, chcete-li použít hodnotu z filamentu nebo od výrobce.",
+            "initial_weight": "Počáteční hmotnost vlákna na cívce (čistá hmotnost). Pokud není nastavena, použije se hmotnost z objektu filament.",
+            "external_filament": "Vybrali jste filament z externí databáze. Objekt filamentu (a případně i objekt výrobce) se vytvoří automaticky při vytvoření této cívky. Tím se mohou vytvořit duplicitní objekty filamentů, pokud jste již objekt filamentu pro toto vlákno vytvořili."
         },
         "titles": {
             "create": "Vytvořit cívku",
@@ -201,10 +204,11 @@
             "settings_extruder_temp": "Teplota extruderu",
             "settings_bed_temp": "Teplota podložky",
             "color_hex": "Barva",
-            "spools": "Zobrazit cívky"
+            "spools": "Zobrazit cívky",
+            "external_id": "Externí ID"
         },
         "fields_help": {
-            "name": "Název filamentu, aby se tento typ filamentu odlišil od ostatních filamentů od stejného dodavatele. Měl by obsahovat například barvu.",
+            "name": "Název filamentu, aby se tento typ vlákna odlišil od ostatních filamentů od stejného výrobce. Měl by obsahovat například barvu.",
             "material": "Např. PLA, ABS, ASA, PETG, atd.",
             "price": "Cena celé cívky.",
             "weight": "Hmotnost plného cívky filamentu (čistá hmotnost). Tato hmotnost by neměla zahrnovat hmotnost samotné cívky, ale pouze filamentu. Obvykle se uvádí na obalu.",
@@ -220,7 +224,9 @@
             "show_title": "[Filament #{{id}}] {{name}}"
         },
         "form": {
-            "filament_updated": "Toto vlákno bylo od doby, kdy jste otevřeli tuto stránku, někým/něčím aktualizováno. Uložením se tyto změny přepíší!"
+            "filament_updated": "Toto vlákno bylo od doby, kdy jste otevřeli tuto stránku, někým/něčím aktualizováno. Uložením se tyto změny přepíší!",
+            "import_external": "Import z externího zdroje",
+            "import_external_description": "Výběrem filamentu v seznamu se automaticky vyplní jeho údaje ve formuláři pro vytvoření filamentu. Tím se přepíší všechny údaje, které jste do formuláře zadali.<br><br>Po kliknutí na tlačítko OK se v případě potřeby automaticky vytvoří objekt Výrobce."
         },
         "buttons": {
             "add_spool": "Přidat cívku"
@@ -233,7 +239,8 @@
             "name": "Název",
             "registered": "Registrováno",
             "comment": "Komentář",
-            "empty_spool_weight": "Hmotnost prázdné cívky"
+            "empty_spool_weight": "Hmotnost prázdné cívky",
+            "external_id": "Externí ID"
         },
         "titles": {
             "create": "Vytvořit výrobce",

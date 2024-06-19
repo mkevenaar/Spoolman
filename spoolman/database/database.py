@@ -1,4 +1,5 @@
 """SQLAlchemy database setup."""
+
 import datetime
 import logging
 import shutil
@@ -119,6 +120,7 @@ class Database:
 
         Returns:
             The path to the created backup or None if no backup was created.
+
         """
         if not self.is_file_based_sqlite() or self.connection_url.database is None:
             logger.info("Skipping backup as the database is not SQLite.")
@@ -158,6 +160,7 @@ def setup_db(connection_url: URL) -> None:
 
     Args:
         connection_url: The URL to connect to the database.
+
     """
     global __db  # noqa: PLW0603
     __db = Database(connection_url)
@@ -169,6 +172,7 @@ async def backup_global_db(num_backups: int = 5) -> Optional[Path]:
 
     Returns:
         The path to the created backup or None if no backup was created.
+
     """
     if __db is None:
         raise RuntimeError("DB is not setup.")
@@ -197,13 +201,14 @@ def schedule_tasks(scheduler: Scheduler) -> None:
 
     Args:
         scheduler: The scheduler to use for scheduling tasks.
+
     """
     if __db is None:
         raise RuntimeError("DB is not setup.")
     if env.is_metrics_enabled():
         logger.info("Scheduling automatic metric collection.")
         # Run every minute, may be needs specify timer
-        scheduler.minutely(datetime.time(second=0), _metrics)
+        scheduler.minutely(datetime.time(second=0), _metrics)  # type: ignore[arg-type]
     if not env.is_automatic_backup_enabled():
         return
     if "sqlite" in __db.connection_url.drivername:
@@ -217,6 +222,7 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
 
     Yields:
         The database session.
+
     """
     if __db is None or __db.session_maker is None:
         raise RuntimeError("DB is not setup.")
