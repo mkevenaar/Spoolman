@@ -11,7 +11,7 @@ from typing import Any
 import httpx
 import pytest
 
-TIMEOUT = 10
+TIMEOUT = 30
 
 URL = "http://spoolman:" + os.environ.get("SPOOLMAN_PORT", "8000")
 
@@ -37,17 +37,19 @@ def get_db_type() -> DbType:
     return db_type
 
 
-@pytest.fixture(scope="session", autouse=True)
-def _wait_for_server():  # noqa: ANN202
+def pytest_sessionstart(session):  # noqa: ARG001, ANN001
     """Wait for the server to start up."""
     start_time = time.time()
     while True:
         try:
+            print("pytest: Waiting for spoolman to be available...")  # noqa: T201
             response = httpx.get(URL, timeout=1)
             response.raise_for_status()
+            print("pytest: Spoolman now seems to be up!")  # noqa: T201
         except httpx.HTTPError:  # noqa: PERF203
             if time.time() - start_time > TIMEOUT:
                 raise
+            time.sleep(0.5)
         else:
             break
 

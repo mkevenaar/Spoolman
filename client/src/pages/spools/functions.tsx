@@ -1,10 +1,13 @@
 import { useSelect, useTranslate } from "@refinedev/core";
+import { useQueries } from "@tanstack/react-query";
+import { Form, InputNumber, Modal, Radio } from "antd";
+import { useForm } from "antd/es/form/Form";
+import { useCallback, useMemo, useState } from "react";
 import { formatLength, formatWeight } from "../../utils/parsing";
-import { getAPIURL } from "../../utils/url";
-import { ISpool } from "./model";
-import { IFilament } from "../filaments/model";
 import { SpoolType, useGetExternalDBFilaments } from "../../utils/queryExternalDB";
-import { useMemo } from "react";
+import { getAPIURL } from "../../utils/url";
+import { IFilament } from "../filaments/model";
+import { ISpool } from "./model";
 
 export async function setSpoolArchived(spool: ISpool, archived: boolean) {
   const init: RequestInit = {
@@ -18,6 +21,48 @@ export async function setSpoolArchived(spool: ISpool, archived: boolean) {
   };
   const request = new Request(getAPIURL() + "/spool/" + spool.id);
   await fetch(request, init);
+}
+
+/**
+ * Use some spool filament from this spool. Either specify length or weight.
+ * @param spool The spool
+ * @param length The length to add/subtract from the spool, in mm
+ * @param weight The weight to add/subtract from the spool, in g
+ */
+export async function useSpoolFilament(spool: ISpool, length?: number, weight?: number) {
+  const init: RequestInit = {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      use_length: length,
+      use_weight: weight,
+    }),
+  };
+  const request = new Request(`${getAPIURL()}/spool/${spool.id}/use`);
+  await fetch(request, init);
+}
+
+/**
+ * Returns an array of queries using the useQueries hook from @tanstack/react-query.
+ * Each query fetches a spool by its ID from the server.
+ *
+ * @param {number[]} ids - An array of spool IDs to fetch.
+ * @return An array of query results, each containing the fetched spool data.
+ */
+export function useGetSpoolsByIds(ids: number[]) {
+  return useQueries({
+    queries: ids.map((id) => {
+      return {
+        queryKey: ["spool", id],
+        queryFn: async () => {
+          const res = await fetch(getAPIURL() + "/spool/" + id);
+          return (await res.json()) as ISpool;
+        },
+      };
+    }),
+  });
 }
 
 /**
@@ -125,5 +170,69 @@ export function useGetFilamentSelectOptions() {
     internalSelectOptions: filamentSelectInternal,
     externalSelectOptions: filamentSelectExternal,
     allExternalFilaments: externalFilaments.data,
+  };
+}
+
+type MeasurementType = "length" | "weight";
+
+export function useSpoolAdjustModal() {
+  const t = useTranslate();
+  const [form] = useForm();
+
+  const [curSpool, setCurSpool] = useState<ISpool | null>(null);
+  const [measurementType, setMeasurementType] = useState<MeasurementType>("length");
+
+  const openSpoolAdjustModal = useCallback((spool: ISpool) => {
+    setCurSpool(spool);
+  }, []);
+
+  const spoolAdjustModal = useMemo(() => {
+    if (curSpool === null) {
+      return null;
+    }
+
+    const onSubmit = async () => {
+      if (curSpool === null) {
+        return;
+      }
+
+      const value = form.getFieldValue("filament_value");
+      if (value === undefined || value === null) {
+        return;
+      }
+
+      if (measurementType === "length") {
+        await useSpoolFilament(curSpool, value, undefined);
+      } else {
+        await useSpoolFilament(curSpool, undefined, value);
+      }
+
+      setCurSpool(null);
+    };
+
+    return (
+      <Modal title={t("spool.titles.adjust")} open onCancel={() => setCurSpool(null)} onOk={form.submit}>
+        <p>{t("spool.form.adjust_filament_help")}</p>
+        <Form form={form} initialValues={{ measurement_type: measurementType }} onFinish={onSubmit}>
+          <Form.Item label={t("spool.form.measurement_type_label")} name="measurement_type">
+            <Radio.Group
+              value={measurementType}
+              onChange={({ target: { value } }) => setMeasurementType(value as MeasurementType)}
+            >
+              <Radio.Button value="length">{t("spool.form.measurement_type.length")}</Radio.Button>
+              <Radio.Button value="weight">{t("spool.form.measurement_type.weight")}</Radio.Button>
+            </Radio.Group>
+          </Form.Item>
+          <Form.Item label={t("spool.form.adjust_filament_value")} name="filament_value">
+            <InputNumber precision={1} addonAfter={measurementType === "length" ? "mm" : "g"} />
+          </Form.Item>
+        </Form>
+      </Modal>
+    );
+  }, [curSpool, measurementType, t]);
+
+  return {
+    openSpoolAdjustModal,
+    spoolAdjustModal,
   };
 }

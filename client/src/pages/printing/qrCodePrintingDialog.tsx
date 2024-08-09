@@ -1,8 +1,7 @@
-import { Col, Form, InputNumber, QRCode, Row, Slider, Switch } from "antd";
-import { useSavedState } from "../../utils/saveload";
-import PrintingDialog from "./printingDialog";
 import { useTranslate } from "@refinedev/core";
+import { Col, Form, InputNumber, QRCode, Radio, RadioChangeEvent, Row, Slider, Switch } from "antd";
 import { QRCodePrintSettings } from "./printing";
+import PrintingDialog from "./printingDialog";
 
 interface QRCodeData {
   value: string;
@@ -11,61 +10,83 @@ interface QRCodeData {
 }
 
 interface QRCodePrintingDialogProps {
-  visible: boolean;
   items: QRCodeData[];
   printSettings: QRCodePrintSettings;
   setPrintSettings: (setPrintSettings: QRCodePrintSettings) => void;
-  onCancel: () => void;
   extraSettings?: JSX.Element;
   extraSettingsStart?: JSX.Element;
+  extraButtons?: JSX.Element;
 }
 
 const QRCodePrintingDialog: React.FC<QRCodePrintingDialogProps> = ({
-  visible,
   items,
   printSettings,
   setPrintSettings,
-  onCancel,
   extraSettings,
   extraSettingsStart,
+  extraButtons,
 }) => {
   const t = useTranslate();
 
   const showContent = printSettings?.showContent === undefined ? true : printSettings?.showContent;
-  const textSize = printSettings?.textSize || 5;
-  const showSpoolmanIcon = printSettings?.showSpoolmanIcon === undefined ? true : printSettings?.showSpoolmanIcon;
+  const showQRCodeMode = printSettings?.showQRCodeMode || "withIcon";
+  const textSize = printSettings?.textSize || 3;
 
   const elements = items.map((item) => {
     return (
       <div className="print-qrcode-item">
-        <div className="print-qrcode-container">
-          <QRCode
-            className="print-qrcode"
-            icon={showSpoolmanIcon ? "/favicon.svg" : undefined}
-            value={item.value}
-            errorLevel={item.errorLevel}
-            type="svg"
-            color="#000"
-          />
-        </div>
-        {showContent && <div className="print-qrcode-title">{item.label ?? item.value}</div>}
+        {showQRCodeMode !== "no" && (
+          <div className="print-qrcode-container">
+            <QRCode
+              className="print-qrcode"
+              icon={showQRCodeMode === "withIcon" ? "/favicon.svg" : undefined}
+              value={item.value}
+              errorLevel={item.errorLevel}
+              type="svg"
+              color="#000"
+            />
+          </div>
+        )}
+        {showContent && (
+          <div className="print-qrcode-title" style={showQRCodeMode === "no" ? { paddingLeft: "1mm" } : {}}>
+            {item.label ?? item.value}
+          </div>
+        )}
       </div>
     );
   });
 
   return (
     <PrintingDialog
-      visible={visible}
-      title={t("printing.qrcode.title")}
       items={elements}
       printSettings={printSettings.printSettings}
       setPrintSettings={(newSettings) => {
         printSettings.printSettings = newSettings;
         setPrintSettings(printSettings);
       }}
+      extraButtons={extraButtons}
       extraSettingsStart={extraSettingsStart}
       extraSettings={
         <>
+          <Form.Item label={t("printing.qrcode.showQRCode")}>
+            <Radio.Group
+              options={[
+                { label: t("printing.qrcode.showQRCodeMode.no"), value: "no" },
+                {
+                  label: t("printing.qrcode.showQRCodeMode.simple"),
+                  value: "simple",
+                },
+                { label: t("printing.qrcode.showQRCodeMode.withIcon"), value: "withIcon" },
+              ]}
+              onChange={(e: RadioChangeEvent) => {
+                printSettings.showQRCodeMode = e.target.value;
+                setPrintSettings(printSettings);
+              }}
+              value={showQRCodeMode}
+              optionType="button"
+              buttonStyle="solid"
+            />
+          </Form.Item>
           <Form.Item label={t("printing.qrcode.showContent")}>
             <Switch
               checked={showContent}
@@ -107,15 +128,7 @@ const QRCodePrintingDialog: React.FC<QRCodePrintingDialogProps> = ({
               </Col>
             </Row>
           </Form.Item>
-          <Form.Item label={t("printing.qrcode.showSpoolmanIcon")}>
-            <Switch
-              checked={showSpoolmanIcon}
-              onChange={(checked) => {
-                printSettings.showSpoolmanIcon = checked;
-                setPrintSettings(printSettings);
-              }}
-            />
-          </Form.Item>
+
           {extraSettings}
         </>
       }
@@ -123,7 +136,7 @@ const QRCodePrintingDialog: React.FC<QRCodePrintingDialogProps> = ({
             .print-page .print-qrcode-item {
               display: flex;
               width: 100%;
-              max-height: 100%;
+              height: 100%;
               justify-content: center;
             }
 
@@ -135,6 +148,7 @@ const QRCodePrintingDialog: React.FC<QRCodePrintingDialogProps> = ({
             .print-page .print-qrcode {
               width: auto !important;
               height: auto !important;
+              padding: 2mm;
             }
 
             .print-page .print-qrcode-title {
@@ -153,7 +167,6 @@ const QRCodePrintingDialog: React.FC<QRCodePrintingDialogProps> = ({
               max-width: 100%;
             }
             `}
-      onCancel={onCancel}
     />
   );
 };

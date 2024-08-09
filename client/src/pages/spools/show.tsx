@@ -1,17 +1,18 @@
-import React from "react";
+import { PrinterOutlined } from "@ant-design/icons";
+import { DateField, NumberField, Show, TextField } from "@refinedev/antd";
 import { IResourceComponentsProps, useShow, useTranslate } from "@refinedev/core";
-import { Show, NumberField, DateField, TextField } from "@refinedev/antd";
-import { Typography } from "antd";
-import { NumberFieldUnit } from "../../components/numberField";
+import { Button, Typography } from "antd";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
-import { ISpool } from "./model";
-import { enrichText } from "../../utils/parsing";
-import { IFilament } from "../filaments/model";
-import { EntityType, useGetFields } from "../../utils/queryFields";
+import React from "react";
 import { ExtraFieldDisplay } from "../../components/extraFields";
-import { useCurrency } from "../../utils/settings";
+import { NumberFieldUnit } from "../../components/numberField";
 import SpoolIcon from "../../components/spoolIcon";
+import { enrichText } from "../../utils/parsing";
+import { EntityType, useGetFields } from "../../utils/queryFields";
+import { useCurrency } from "../../utils/settings";
+import { IFilament } from "../filaments/model";
+import { ISpool } from "./model";
 
 dayjs.extend(utc);
 
@@ -31,7 +32,7 @@ export const SpoolShow: React.FC<IResourceComponentsProps> = () => {
 
   const spoolPrice = (item: ISpool) => {
     let spoolPrice = "";
-    if (!item.price) {
+    if (item.price === undefined) {
       spoolPrice = `${item.filament.price}`;
       return spoolPrice;
     }
@@ -75,7 +76,22 @@ export const SpoolShow: React.FC<IResourceComponentsProps> = () => {
     : record?.filament.color_hex;
 
   return (
-    <Show isLoading={isLoading} title={record ? formatTitle(record) : ""}>
+    <Show
+      isLoading={isLoading}
+      title={record ? formatTitle(record) : ""}
+      headerButtons={({ defaultButtons }) => (
+        <>
+          <Button
+            type="primary"
+            icon={<PrinterOutlined />}
+            href={"/spool/print?spools=" + record?.id + "&return=" + encodeURIComponent(window.location.pathname)}
+          >
+            {t("printing.qrcode.button")}
+          </Button>
+          {defaultButtons}
+        </>
+      )}
+    >
       <Title level={5}>{t("spool.fields.id")}</Title>
       <NumberField value={record?.id ?? ""} />
       <Title level={5}>{t("spool.fields.filament")}</Title>

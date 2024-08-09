@@ -1,22 +1,20 @@
-import React from "react";
-import { HttpError, IResourceComponentsProps, useInvalidate, useTranslate } from "@refinedev/core";
 import { Create, useForm, useSelect } from "@refinedev/antd";
-import { Form, Input, Select, InputNumber, ColorPicker, Button, Typography, Modal, Radio } from "antd";
+import { HttpError, IResourceComponentsProps, useInvalidate, useTranslate } from "@refinedev/core";
+import { Button, ColorPicker, Form, Input, InputNumber, Radio, Select, Typography } from "antd";
 import TextArea from "antd/es/input/TextArea";
-import { numberFormatter, numberParser } from "../../utils/parsing";
-import { IVendor } from "../vendors/model";
-import { IFilament, IFilamentParsedExtras } from "./model";
-import { EntityType, useGetFields } from "../../utils/queryFields";
-import { ExtraFieldFormItem, StringifiedExtras } from "../../components/extraFields";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
-import { getCurrencySymbol, useCurrency } from "../../utils/settings";
-import { searchMatches } from "../../utils/filtering";
-import { ExternalFilament, useGetExternalDBFilaments } from "../../utils/queryExternalDB";
-import { formatFilamentLabel } from "../spools/functions";
+import { useEffect, useState } from "react";
+import { ExtraFieldFormItem, ParsedExtras, StringifiedExtras } from "../../components/extraFields";
 import { FilamentImportModal } from "../../components/filamentImportModal";
-import { getOrCreateVendorFromExternal } from "../vendors/functions";
 import { MultiColorPicker } from "../../components/multiColorPicker";
+import { numberFormatter, numberParser } from "../../utils/parsing";
+import { ExternalFilament } from "../../utils/queryExternalDB";
+import { EntityType, useGetFields } from "../../utils/queryFields";
+import { getCurrencySymbol, useCurrency } from "../../utils/settings";
+import { getOrCreateVendorFromExternal } from "../vendors/functions";
+import { IVendor } from "../vendors/model";
+import { IFilament, IFilamentParsedExtras } from "./model";
 
 dayjs.extend(utc);
 
@@ -32,9 +30,9 @@ export const FilamentCreate: React.FC<IResourceComponentsProps & CreateOrClonePr
   const t = useTranslate();
   const extraFields = useGetFields(EntityType.filament);
   const currency = useCurrency();
-  const [isImportExtOpen, setIsImportExtOpen] = React.useState(false);
+  const [isImportExtOpen, setIsImportExtOpen] = useState(false);
   const invalidate = useInvalidate();
-  const [colorType, setColorType] = React.useState<"single" | "multi">("single");
+  const [colorType, setColorType] = useState<"single" | "multi">("single");
 
   const { form, formProps, formLoading, onFinish, redirect } = useForm<
     IFilament,
@@ -52,6 +50,9 @@ export const FilamentCreate: React.FC<IResourceComponentsProps & CreateOrClonePr
     if (formProps.initialValues.vendor) {
       formProps.initialValues.vendor_id = formProps.initialValues.vendor.id;
     }
+
+    // Parse the extra fields from string values into real types
+    formProps.initialValues = ParsedExtras(formProps.initialValues);
   }
 
   const handleSubmit = async (redirectTo: "list" | "create") => {
@@ -72,6 +73,8 @@ export const FilamentCreate: React.FC<IResourceComponentsProps & CreateOrClonePr
       invalidates: ["list", "detail"],
     });
 
+    setColorType(filament.color_hexes ? "multi" : "single")
+
     form.setFieldsValue({
       name: filament.name,
       vendor_id: vendor.id,
@@ -81,6 +84,8 @@ export const FilamentCreate: React.FC<IResourceComponentsProps & CreateOrClonePr
       weight: filament.weight,
       spool_weight: filament.spool_weight || undefined,
       color_hex: filament.color_hex,
+      multi_color_hexes: filament.color_hexes?.join(",") || undefined,
+      multi_color_direction: filament.multi_color_direction,
       settings_extruder_temp: filament.extruder_temp || undefined,
       settings_bed_temp: filament.bed_temp || undefined,
     });
@@ -88,7 +93,7 @@ export const FilamentCreate: React.FC<IResourceComponentsProps & CreateOrClonePr
 
   // Use useEffect to update the form's initialValues when the extra fields are loaded
   // This is necessary because the form is rendered before the extra fields are loaded
-  React.useEffect(() => {
+  useEffect(() => {
     extraFields.data?.forEach((field) => {
       if (formProps.initialValues && field.default_value) {
         const parsedValue = JSON.parse(field.default_value as string);

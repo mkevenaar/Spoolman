@@ -28,7 +28,8 @@
         "hideColumns": "Ocultar Colunas",
         "clearFilters": "Limpar Filtros",
         "create": "Criar",
-        "saveAndAdd": "Guardar e Adicionar"
+        "saveAndAdd": "Guardar e Adicionar",
+        "continue": "Continuar"
     },
     "warnWhenUnsavedChanges": "Você tem certeza de que quer sair? Você tem alterações não salvas.",
     "notifications": {
@@ -87,7 +88,18 @@
                 "border": "Borda",
                 "grid": "Grade"
             },
-            "printerMarginTop": "Área Segura Superior"
+            "printerMarginTop": "Área Segura Superior",
+            "settings": "Pré-definições",
+            "defaultSettings": "Por omissão",
+            "addSettings": "Adicionar Pré-Definição",
+            "newSetting": "Novo",
+            "deleteSettings": "Remover Pré-definição Actual",
+            "deleteSettingsConfirm": "Tem a certeza que pretender remover esta pré-definição?",
+            "settingsName": "Nome da Pré-definição",
+            "itemCopies": "Cópias do Artigo",
+            "duplicateSettings": "Duplicar",
+            "saveSetting": "Guardar Pré-definições",
+            "saveAsImage": "Guardar como Imagem"
         },
         "spoolSelect": {
             "selectedTotal_one": "{{count}} carretel selecionado",
@@ -95,18 +107,18 @@
             "selectedTotal_other": "{{count}} carretéis selecionados",
             "noSpoolsSelected": "Você não selecionou nenhum carretel.",
             "title": "Selecionar Carretéis",
-            "description": "Selecione os carretéis para imprimir os códigos QR.",
+            "description": "Selecione os carretéis para imprimir as etiquetas.",
             "showArchived": "Mostrar Arquivado",
             "selectAll": "Selecionar/Desmarcar Tudo"
         },
         "qrcode": {
-            "title": "Imprimindo Códigos QR",
-            "button": "Imprimir Códigos QR",
+            "title": "Impressão de Etiqueta",
+            "button": "Imprimir Etiquetas",
             "spoolWeight": "Peso do Carretel: {{weight}}",
             "lotNr": "Número do Lote: {{lot}}",
             "bedTemp": "Temperatura da Mesa: {{temp}}",
             "extruderTemp": "Temperatura do Bico: {{temp}}",
-            "textSize": "Tamanho do Texto do Conteúdo",
+            "textSize": "Tamanho do Texto da Etiqueta",
             "showSpoolmanIcon": "Mostrar ícone do Spoolman",
             "showVendor": "Fabricante",
             "showContent": "Imprimir Etiqueta",
@@ -115,7 +127,15 @@
             "showTemperatures": "Temperaturas",
             "showSpoolComment": "Comentário sobre o Carretel",
             "showFilamentComment": "Comentário sobre o Filamento",
-            "showVendorComment": "Comentário sobre o Fabricante"
+            "showVendorComment": "Comentário sobre o Fabricante",
+            "template": "Modelo de Etiqueta",
+            "templateHelp": "Use {} para incluir valores da bobine como texto. Por exemplo {id} será substituído pelo ID da bobine, ou {filament.material} será substituído pelo material da bobine. Coloque texto entre duplos asteriscos ** para colocar a negrito. Pressione o botão para ver a lista de etiquetas disponíveis.",
+            "showQRCode": "Imprimir Código QR",
+            "showQRCodeMode": {
+                "no": "Não",
+                "simple": "Simples",
+                "withIcon": "Com Ícone"
+            }
         }
     },
     "spool": {
@@ -162,11 +182,19 @@
             "list": "Carretéis",
             "show": "Mostrar Carretel",
             "show_title": "[Carretel #{{id}}] {{name}}",
-            "archive": "Arquivar Carretel"
+            "archive": "Arquivar Carretel",
+            "adjust": "Ajustar Filamento"
         },
         "form": {
             "new_location_prompt": "Insira um novo local",
-            "spool_updated": "Este carretel foi atualizado por alguém desde que abriu esta página. Guardar substituirá essas alterações!"
+            "spool_updated": "Este carretel foi atualizado por alguém desde que abriu esta página. Guardar substituirá essas alterações!",
+            "measurement_type": {
+                "length": "Comprimento",
+                "weight": "Peso"
+            },
+            "measurement_type_label": "Tipo de Medida",
+            "adjust_filament_help": "Aqui pode adicionar ou subtrair filamento do carretel. Um valor positivo consome filamento, um valor negativo adiciona filamento.",
+            "adjust_filament_value": "Consumir Montante"
         },
         "messages": {
             "archive": "Tem certeza de que deseja arquivar este carretel?"
@@ -193,7 +221,11 @@
             "settings_bed_temp": "Temperatura da Mesa",
             "color_hex": "Cor",
             "spools": "Mostrar Carretéis",
-            "external_id": "ID Externo"
+            "external_id": "ID Externo",
+            "single_color": "Único",
+            "multi_color": "Múltiplo",
+            "coaxial": "Coextrusado",
+            "longitudinal": "Longitudinal"
         },
         "fields_help": {
             "article_number": "Por exemplo EAN, UPC, etc.",
@@ -201,7 +233,8 @@
             "name": "Nome do filamento, para distinguir este tipo de filamento entre outros do mesmo fabricante. Deve conter a cor, por exemplo.",
             "material": "Por exemplo PLA, ABS, PETG, etc.",
             "weight": "O peso do filamento de um carretel cheio (peso líquido). Isso não deve incluir o peso do carretel em si, apenas o filamento. É o que normalmente está escrito na embalagem.",
-            "spool_weight": "O peso de um carretel vazio. Usado para determinar o peso medido de um carretel."
+            "spool_weight": "O peso de um carretel vazio. Usado para determinar o peso medido de um carretel.",
+            "multi_color_direction": "Os filamentos podem ter múltiplas cores de duas formas: por coextrusão, como os filamentos de duas cores com estas consistentes ao longo do filamento, or através de mudança de cor longitudinal, como os filamentos que contêm gradientes de cores que vão mudando ao longo da bobine."
         },
         "titles": {
             "create": "Criar Filamento",

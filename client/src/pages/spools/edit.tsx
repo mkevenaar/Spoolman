@@ -1,21 +1,19 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { Edit, useForm } from "@refinedev/antd";
 import { HttpError, IResourceComponentsProps, useTranslate } from "@refinedev/core";
-import { Edit, useForm, useSelect } from "@refinedev/antd";
-import { Form, Input, DatePicker, Select, InputNumber, Radio, Divider, Alert, Typography } from "antd";
-import dayjs from "dayjs";
+import { Alert, DatePicker, Divider, Form, Input, InputNumber, Radio, Select, Typography } from "antd";
 import TextArea from "antd/es/input/TextArea";
-import { IFilament } from "../filaments/model";
-import { ISpool, ISpoolParsedExtras, WeightToEnter } from "./model";
-import { numberFormatter, numberParser } from "../../utils/parsing";
-import { useSpoolmanLocations } from "../../components/otherModels";
 import { message } from "antd/lib";
-import { EntityType, useGetFields } from "../../utils/queryFields";
-import { ExtraFieldFormItem, StringifiedExtras } from "../../components/extraFields";
-import { ParsedExtras } from "../../components/extraFields";
-import { getCurrencySymbol, useCurrency } from "../../utils/settings";
-import { useGetFilamentSelectOptions } from "./functions";
+import dayjs from "dayjs";
+import { useEffect, useMemo, useState } from "react";
+import { ExtraFieldFormItem, ParsedExtras, StringifiedExtras } from "../../components/extraFields";
+import { useSpoolmanLocations } from "../../components/otherModels";
 import { searchMatches } from "../../utils/filtering";
+import { numberFormatter, numberParser } from "../../utils/parsing";
+import { EntityType, useGetFields } from "../../utils/queryFields";
+import { getCurrencySymbol, useCurrency } from "../../utils/settings";
 import { createFilamentFromExternal } from "../filaments/functions";
+import { useGetFilamentSelectOptions } from "./functions";
+import { ISpool, ISpoolParsedExtras, WeightToEnter } from "./model";
 
 /*
 The API returns the extra fields as JSON values, but we need to parse them into their real types
@@ -117,7 +115,7 @@ export const SpoolEdit: React.FC<IResourceComponentsProps> = () => {
   const [weightToEnter, setWeightToEnter] = useState(1);
   const [usedWeight, setUsedWeight] = useState(0);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const newFilamentWeight = selectedFilament?.weight || 0;
     const newSpoolWeight = selectedFilament?.spool_weight || 0;
     console.log("selectedFilament", selectedFilament, newFilamentWeight, newSpoolWeight);
@@ -190,7 +188,7 @@ export const SpoolEdit: React.FC<IResourceComponentsProps> = () => {
     return selectedFilament?.weight ? true : false;
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (weightToEnter >= WeightToEnter.measured_weight) {
       if (!isMeasuredWeightEnabled()) {
         setWeightToEnter(WeightToEnter.remaining_weight);

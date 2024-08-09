@@ -1,21 +1,23 @@
-import React, { useRef } from "react";
+import { FileImageOutlined, PrinterOutlined } from "@ant-design/icons";
+import { useTranslate } from "@refinedev/core";
 import {
-  Modal,
-  Slider,
   Button,
-  Select,
-  Row,
   Col,
-  Form,
-  Divider,
-  RadioChangeEvent,
-  Radio,
-  InputNumber,
   Collapse,
+  Divider,
+  Form,
+  InputNumber,
+  Radio,
+  RadioChangeEvent,
+  Row,
+  Select,
+  Slider,
+  Space,
 } from "antd";
+import * as htmlToImage from "html-to-image";
+import React, { useRef } from "react";
 import ReactToPrint from "react-to-print";
 import { useSavedState } from "../../utils/saveload";
-import { useTranslate } from "@refinedev/core";
 import { PrintSettings } from "./printing";
 
 interface PrintingDialogProps {
@@ -25,9 +27,7 @@ interface PrintingDialogProps {
   style?: string;
   extraSettings?: JSX.Element;
   extraSettingsStart?: JSX.Element;
-  visible: boolean;
-  onCancel: () => void;
-  title?: string;
+  extraButtons?: JSX.Element;
 }
 
 interface PaperDimensions {
@@ -69,9 +69,7 @@ const PrintingDialog: React.FC<PrintingDialogProps> = ({
   style,
   extraSettings,
   extraSettingsStart,
-  visible,
-  onCancel,
-  title,
+  extraButtons,
 }) => {
   const t = useTranslate();
 
@@ -98,7 +96,7 @@ const PrintingDialog: React.FC<PrintingDialogProps> = ({
   const itemHeight = (paperHeight - margin.top - margin.bottom - spacing.vertical) / paperRows - spacing.vertical;
 
   const itemsPerRow = paperColumns;
-  const rowsPerPage = paperRows;
+  const itemsPerPage = itemsPerRow * paperRows;
 
   const itemsIncludingSkipped = [...Array(skipItems).fill(<></>)];
   for (const item of items) {
@@ -107,42 +105,34 @@ const PrintingDialog: React.FC<PrintingDialogProps> = ({
     }
   }
 
-  const rowsOfItems = [];
-  for (let row_idx = 0; row_idx < itemsIncludingSkipped.length / itemsPerRow; row_idx += 1) {
-    rowsOfItems.push(itemsIncludingSkipped.slice(row_idx * itemsPerRow, (row_idx + 1) * itemsPerRow));
-  }
-
   const pageBlocks = [];
-  for (let page_idx = 0; page_idx < rowsOfItems.length / rowsPerPage; page_idx += 1) {
-    pageBlocks.push(rowsOfItems.slice(page_idx * rowsPerPage, (page_idx + 1) * rowsPerPage));
+  for (let page_idx = 0; page_idx < itemsIncludingSkipped.length / itemsPerPage; page_idx += 1) {
+    pageBlocks.push(itemsIncludingSkipped.slice(page_idx * itemsPerPage, (page_idx + 1) * itemsPerPage));
   }
 
-  const pages = pageBlocks.map(function (rows, pageIdx) {
-    const itemRows = rows.map((row, rowIdx) => {
+  const pages = pageBlocks.map(function (items, pageIdx) {
+    const itemDivs = items.map((item, itemIdx) => {
+      const isFirstColumn = itemIdx % itemsPerRow === 0;
+      const isLastColumn = (itemIdx + 1) % itemsPerRow === 0;
+      const isFirstRow = itemIdx < itemsPerRow;
+      const isLastRow = itemsPerPage - itemIdx <= itemsPerRow;
+
       return (
-        <tr key={rowIdx}>
-          {row.map(function (item, colIdx) {
-            return (
-              <td key={colIdx}>
-                <div
-                  style={{
-                    width: `${itemWidth}mm`,
-                    height: `${itemHeight}mm`,
-                    border: borderShowMode === "grid" ? "1px solid #000" : "none",
-                    paddingLeft: colIdx === 0 ? `${Math.max(printerMargin.left - margin.left, 0)}mm` : 0,
-                    paddingRight:
-                      colIdx === paperColumns - 1 ? `${Math.max(printerMargin.right - margin.right, 0)}mm` : 0,
-                    paddingTop: rowIdx === 0 ? `${Math.max(printerMargin.top - margin.top, 0)}mm` : 0,
-                    paddingBottom:
-                      rowIdx === paperRows - 1 ? `${Math.max(printerMargin.bottom - margin.bottom, 0)}mm` : 0,
-                  }}
-                >
-                  {item}
-                </div>
-              </td>
-            );
-          })}
-        </tr>
+        <div
+          key={itemIdx}
+          className="print-page-item"
+          style={{
+            width: `${itemWidth}mm`,
+            height: `${itemHeight}mm`,
+            border: borderShowMode === "grid" ? "1px solid #000" : "none",
+            paddingLeft: isFirstColumn ? `${Math.max(printerMargin.left - margin.left, 0)}mm` : 0,
+            paddingRight: isLastColumn ? `${Math.max(printerMargin.right - margin.right, 0)}mm` : 0,
+            paddingTop: isFirstRow ? `${Math.max(printerMargin.top - margin.top, 0)}mm` : 0,
+            paddingBottom: isLastRow ? `${Math.max(printerMargin.bottom - margin.bottom, 0)}mm` : 0,
+          }}
+        >
+          {item}
+        </div>
       );
     });
 
@@ -160,7 +150,8 @@ const PrintingDialog: React.FC<PrintingDialogProps> = ({
         <div
           className="print-page-area"
           style={{
-            border: borderShowMode !== "none" ? "1px solid #000" : "none",
+            outline: borderShowMode !== "none" ? "1px solid #000" : "none",
+            outlineOffset: "-1px",
             height: `${paperHeight - margin.top - margin.bottom}mm`,
             width: `${paperWidth - margin.left - margin.right}mm`,
             marginTop: `calc(${margin.top}mm - ${borderShowMode !== "none" ? "1px" : "0px"})`,
@@ -169,40 +160,65 @@ const PrintingDialog: React.FC<PrintingDialogProps> = ({
             marginBottom: `calc(${margin.bottom}mm - ${borderShowMode !== "none" ? "1px" : "0px"})`,
           }}
         >
-          <table
+          <div
             style={{
-              alignContent: "flex-start",
+              display: "flex",
+              flexWrap: "wrap",
+              rowGap: `${spacing.vertical}mm`,
+              columnGap: `${spacing.horizontal}mm`,
+              paddingTop: `${spacing.vertical}mm`,
+              paddingLeft: `${spacing.horizontal}mm`,
             }}
           >
-            {itemRows}
-          </table>
+            {itemDivs}
+          </div>
         </div>
       </div>
     );
   });
 
+  const saveAsImage = () => {
+    const hasPrinted: Element[] = [];
+
+    Array.from(document.getElementsByClassName("print-qrcode-item")).forEach(async (item) => {
+      // Prevent printing copies
+      for (let i = 0; i < hasPrinted.length; i += 1) {
+        if (item.isEqualNode(hasPrinted[i])) return;
+      }
+      hasPrinted.push(item);
+
+      // Generate png image
+      const url = await htmlToImage.toPng(item as HTMLElement, {
+        backgroundColor: "#FFF",
+        cacheBust: true,
+      });
+
+      // Download image
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "spoolmanlabel.png";
+      link.click();
+    });
+  };
+
   return (
-    <Modal
-      open={visible}
-      title={title ?? t("printing.generic.title")}
-      onCancel={onCancel}
-      footer={[
-        <ReactToPrint
-          key="print-button"
-          trigger={() => <Button type="primary">{t("printing.generic.print")}</Button>}
-          content={() => printRef.current}
-        />,
-      ]}
-      width={1200} // Set the modal width to accommodate the preview
-    >
+    <>
       <Row gutter={16}>
-        <Col span={14}>
-          {t("printing.generic.description")}
+        <Col
+          span={14}
+          style={{
+            // This magic makes this column take the height of the sibling column
+            // https://stackoverflow.com/a/49065029/2911165
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
           <div
             style={{
               transform: "translateZ(0)",
-              overflow: "hidden scroll",
-              height: "70vh",
+              overflow: "auto",
+              flexBasis: "0px",
+              flexGrow: "1",
             }}
           >
             <div
@@ -211,38 +227,44 @@ const PrintingDialog: React.FC<PrintingDialogProps> = ({
               style={{
                 transform: `scale(${previewScale})`,
                 transformOrigin: "top left",
-                display: "block",
               }}
             >
               <style>
                 {`
                 @media print {
-                    @page {
-                        size: auto;
-                        margin: 0;
-                    }
-                    .print-container {
-                        transform: scale(1) !important;
-                    }
-                    .print-page {
-                        page-break-before: auto;
-                    }
+                  html, body {
+                    height: initial !important;
+                    overflow: initial !important;
+                    -webkit-print-color-adjust: exact;
+                  }
+                    
+                  @page {
+                    size: auto;
+                    margin: 0;
+                  }
+                  .print-container {
+                    transform: scale(1) !important;
+                  }
+                  .print-page {
+                    page-break-before: auto;
+                  }
                 }
 
                 @media screen {
-                    .print-page {
-                        margin-top: 10mm;
-                    }
+                  .print-page {
+                    margin-top: 10mm;
+                  }
                 }
 
-                .print-page table {
-                    border-spacing: ${spacing.horizontal}mm ${spacing.vertical}mm;
-                    border-collapse: separate;
+                .print-page {
+                  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+                  line-height: 1.2;
                 }
 
-                .print-page td {
-                    padding: 0;
+                .print-page * {
+                  box-sizing: border-box;
                 }
+
                 ${style ?? ""}
                 `}
               </style>
@@ -367,6 +389,8 @@ const PrintingDialog: React.FC<PrintingDialogProps> = ({
                 {extraSettings}
               </Collapse.Panel>
               <Collapse.Panel header={t("printing.generic.layoutSettings")} key="2">
+                {t("printing.generic.description")}
+                <Divider />
                 <Form.Item label={t("printing.generic.paperSize")}>
                   <Select
                     value={paperSize}
@@ -786,7 +810,26 @@ const PrintingDialog: React.FC<PrintingDialogProps> = ({
           </Form>
         </Col>
       </Row>
-    </Modal>
+      <Row justify={"end"}>
+        <Col>
+          <Space>
+            {extraButtons}
+            <Button type="primary" icon={<FileImageOutlined />} size="large" onClick={saveAsImage}>
+              {t("printing.generic.saveAsImage")}
+            </Button>
+            <ReactToPrint
+              key="print-button"
+              trigger={() => (
+                <Button type="primary" icon={<PrinterOutlined />} size="large">
+                  {t("printing.generic.print")}
+                </Button>
+              )}
+              content={() => printRef.current}
+            />
+          </Space>
+        </Col>
+      </Row>
+    </>
   );
 };
 

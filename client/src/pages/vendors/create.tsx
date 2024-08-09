@@ -1,13 +1,13 @@
-import React from "react";
-import { HttpError, IResourceComponentsProps, useTranslate } from "@refinedev/core";
 import { Create, useForm } from "@refinedev/antd";
-import { Button, Form, Input, Typography, InputNumber } from "antd";
+import { HttpError, IResourceComponentsProps, useTranslate } from "@refinedev/core";
+import { Button, Form, Input, InputNumber, Typography } from "antd";
 import TextArea from "antd/es/input/TextArea";
-import { IVendor, IVendorParsedExtras } from "./model";
-import { EntityType, useGetFields } from "../../utils/queryFields";
-import { ExtraFieldFormItem, StringifiedExtras } from "../../components/extraFields";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
+import { useEffect } from "react";
+import { ExtraFieldFormItem, ParsedExtras, StringifiedExtras } from "../../components/extraFields";
+import { EntityType, useGetFields } from "../../utils/queryFields";
+import { IVendor, IVendorParsedExtras } from "./model";
 
 dayjs.extend(utc);
 
@@ -30,6 +30,11 @@ export const VendorCreate: React.FC<IResourceComponentsProps & CreateOrCloneProp
     formProps.initialValues = {};
   }
 
+  if (props.mode === "clone") {
+    // Parse the extra fields from string values into real types
+    formProps.initialValues = ParsedExtras(formProps.initialValues);
+  }
+
   const handleSubmit = async (redirectTo: "list" | "edit" | "create") => {
     const values = StringifiedExtras(await form.validateFields());
     await onFinish(values);
@@ -38,7 +43,7 @@ export const VendorCreate: React.FC<IResourceComponentsProps & CreateOrCloneProp
 
   // Use useEffect to update the form's initialValues when the extra fields are loaded
   // This is necessary because the form is rendered before the extra fields are loaded
-  React.useEffect(() => {
+  useEffect(() => {
     extraFields.data?.forEach((field) => {
       if (formProps.initialValues && field.default_value) {
         const parsedValue = JSON.parse(field.default_value as string);

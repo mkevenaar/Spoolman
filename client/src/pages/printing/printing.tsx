@@ -1,7 +1,6 @@
-import React, { ReactNode } from "react";
-import { ISpool } from "../../pages/spools/model";
-import { useGetSetting, useSetSetting } from "../../utils/querySettings";
 import { v4 as uuidv4 } from "uuid";
+import { useGetSetting, useSetSetting } from "../../utils/querySettings";
+import { ISpool } from "../spools/model";
 
 export interface PrintSettings {
   id: string;
@@ -20,8 +19,8 @@ export interface PrintSettings {
 
 export interface QRCodePrintSettings {
   showContent?: boolean;
+  showQRCodeMode?: "no" | "simple" | "withIcon";
   textSize?: number;
-  showSpoolmanIcon?: boolean;
   printSettings: PrintSettings;
 }
 
@@ -31,7 +30,7 @@ export interface SpoolQRCodePrintSettings {
 }
 
 export function useGetPrintSettings(): SpoolQRCodePrintSettings[] | undefined {
-  const { data } = useGetSetting("print_settings");
+  const { data } = useGetSetting("print_presets");
   if (!data) return;
   const parsed: SpoolQRCodePrintSettings[] =
     data && data.value ? JSON.parse(data.value) : ([] as SpoolQRCodePrintSettings[]);
@@ -45,7 +44,7 @@ export function useGetPrintSettings(): SpoolQRCodePrintSettings[] | undefined {
 }
 
 export function useSetPrintSettings(): (spoolQRCodePrintSettings: SpoolQRCodePrintSettings[]) => void {
-  const mut = useSetSetting("print_settings");
+  const mut = useSetSetting("print_presets");
 
   return (spoolQRCodePrintSettings: SpoolQRCodePrintSettings[]) => {
     mut.mutate(spoolQRCodePrintSettings);
@@ -61,7 +60,11 @@ function getTagValue(tag: string, obj: GenericObject): any {
   // Split tag by .
   const tagParts = tag.split(".");
   if (tagParts[0] === "extra") {
-    return JSON.parse(obj.extra[tagParts[1]]);
+    const extraValue = obj.extra[tagParts[1]];
+    if (extraValue === undefined) {
+      return "?";
+    }
+    return JSON.parse(extraValue);
   }
 
   const value = obj[tagParts[0]] ?? "?";

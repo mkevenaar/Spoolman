@@ -1,17 +1,17 @@
+import { DateField, TextField } from "@refinedev/antd";
+import { UseQueryResult } from "@tanstack/react-query";
 import { Button, Col, Dropdown, Row, Space, Spin } from "antd";
 import { ColumnFilterItem, ColumnType } from "antd/es/table/interface";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import { AlignType } from "rc-table/lib/interface";
+import { Link } from "react-router-dom";
 import { getFiltersForField, typeFilters } from "../utils/filtering";
+import { enrichText } from "../utils/parsing";
+import { Field, FieldType } from "../utils/queryFields";
 import { TableState } from "../utils/saveload";
 import { getSortOrderForField, typeSorters } from "../utils/sorting";
 import { NumberFieldUnit, NumberFieldUnitRange } from "./numberField";
-import dayjs from "dayjs";
-import utc from "dayjs/plugin/utc";
-import { DateField, TextField } from "@refinedev/antd";
-import { useTranslate } from "@refinedev/core";
-import { enrichText } from "../utils/parsing";
-import { UseQueryResult } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
-import { Field, FieldType } from "../utils/queryFields";
 import SpoolIcon from "./spoolIcon";
 
 dayjs.extend(utc);
@@ -44,6 +44,7 @@ interface BaseColumnProps<Obj extends Entity> {
   i18ncat?: string;
   i18nkey?: string;
   title?: string;
+  align?: AlignType;
   sorter?: boolean;
   t: (key: string) => string;
   navigate: (link: string) => void;
@@ -87,6 +88,7 @@ function Column<Obj extends Entity>(
 
   const columnProps: ColumnType<Obj> = {
     dataIndex: props.id,
+    align: props.align,
     title: props.title ?? t(props.i18nkey ?? `${props.i18ncat}.fields.${props.id}`),
     filterMultiple: props.allowMultipleFilters ?? true,
     width: props.width ?? undefined,
@@ -226,6 +228,7 @@ interface NumberColumnProps<Obj extends Entity> extends BaseColumnProps<Obj> {
 export function NumberColumn<Obj extends Entity>(props: NumberColumnProps<Obj>) {
   return Column({
     ...props,
+    align: "right",
     render: (rawValue) => {
       const value = props.transform ? props.transform(rawValue) : rawValue;
       if (value === null || value === undefined) {
@@ -255,18 +258,19 @@ export function DateColumn<Obj extends Entity>(props: BaseColumnProps<Obj>) {
           hidden={!value}
           value={dayjs.utc(value).local()}
           title={dayjs.utc(value).local().format()}
-          format="YYYY-MM-DD HH:mm:ss"
+          format="YYYY-MM-DD HH:mm"
         />
       );
     },
   });
 }
 
-export function ActionsColumn<Obj extends Entity>(actionsFn: (record: Obj) => Action[]): ColumnType<Obj> | undefined {
-  const t = useTranslate();
-
+export function ActionsColumn<Obj extends Entity>(
+  title: string,
+  actionsFn: (record: Obj) => Action[]
+): ColumnType<Obj> | undefined {
   return {
-    title: t("table.actions"),
+    title,
     responsive: ["lg"],
     render: (_, record) => {
       const buttons = actionsFn(record).map((action) => {
